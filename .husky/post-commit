@@ -1,0 +1,33 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running post-commit hooks..."
+
+# Get the commit hash
+COMMIT_HASH=$(git rev-parse HEAD)
+
+# Get the commit message
+COMMIT_MSG=$(git log -1 --pretty=%B)
+
+# Get the branch name
+BRANCH_NAME=$(git symbolic-ref --short HEAD)
+
+# Log the commit information
+echo "Commit: $COMMIT_HASH"
+echo "Branch: $BRANCH_NAME"
+echo "Message: $COMMIT_MSG"
+
+# If the commit message contains a ticket number, update the ticket status
+TICKET_NUMBER=$(echo "$COMMIT_MSG" | grep -oE '\[([A-Z]+-[0-9]+)\]' | sed 's/\[//;s/\]//')
+if [ -n "$TICKET_NUMBER" ]; then
+  echo "Found ticket number: $TICKET_NUMBER"
+  # Here you would typically call your ticket tracking system's API
+  # to update the ticket status based on the commit message
+  # For example:
+  # curl -X POST "https://api.yourticketsystem.com/tickets/$TICKET_NUMBER/update" \
+  #   -H "Authorization: Bearer $TICKET_API_TOKEN" \
+  #   -H "Content-Type: application/json" \
+  #   -d "{\"status\": \"in-progress\"}"
+fi
+
+echo "Post-commit hooks completed successfully!" 

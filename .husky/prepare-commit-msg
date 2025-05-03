@@ -1,0 +1,33 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running prepare-commit-msg hooks..."
+
+# Get the commit message file
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="$2"
+
+# If the commit is created with -m or -F, skip this hook
+if [ "$COMMIT_SOURCE" = "message" ] || [ "$COMMIT_SOURCE" = "template" ]; then
+  exit 0
+fi
+
+# Get the branch name
+BRANCH_NAME=$(git symbolic-ref --short HEAD)
+
+# Extract ticket number from branch name if it exists
+TICKET_NUMBER=$(echo "$BRANCH_NAME" | grep -oE '([A-Z]+-[0-9]+)')
+
+# If there's a ticket number, prepend it to the commit message
+if [ -n "$TICKET_NUMBER" ]; then
+  # Read the current commit message
+  COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+  
+  # If the commit message doesn't already contain the ticket number
+  if ! echo "$COMMIT_MSG" | grep -q "$TICKET_NUMBER"; then
+    # Prepend the ticket number to the commit message
+    echo "[$TICKET_NUMBER] $COMMIT_MSG" > "$COMMIT_MSG_FILE"
+  fi
+fi
+
+echo "Prepare-commit-msg hooks completed successfully!" 

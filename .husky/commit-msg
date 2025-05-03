@@ -1,0 +1,31 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running commit-msg hooks..."
+
+# Get the commit message
+COMMIT_MSG=$(cat "$1")
+
+# Check if commit message follows conventional commits format
+if ! echo "$COMMIT_MSG" | grep -qE '^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+'; then
+  echo "Error: Commit message does not follow conventional commits format."
+  echo "Please use one of the following prefixes:"
+  echo "  - feat: for new features"
+  echo "  - fix: for bug fixes"
+  echo "  - docs: for documentation changes"
+  echo "  - style: for code style changes"
+  echo "  - refactor: for code refactoring"
+  echo "  - test: for test changes"
+  echo "  - chore: for maintenance tasks"
+  echo ""
+  echo "Example: feat(auth): add login functionality"
+  exit 1
+fi
+
+# Check if commit message is too long
+if [ ${#COMMIT_MSG} -gt 100 ]; then
+  echo "Error: Commit message is too long. Maximum length is 100 characters."
+  exit 1
+fi
+
+echo "Commit message validation completed successfully!" 

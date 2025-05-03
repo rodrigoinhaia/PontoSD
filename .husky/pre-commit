@@ -1,0 +1,24 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running pre-commit hooks..."
+
+# Run ESLint
+echo "Running ESLint..."
+npm run lint
+
+# Run Prettier
+echo "Running Prettier..."
+npm run format
+
+# Run tests
+echo "Running tests..."
+npm test
+
+# If any of the above commands fail, exit with error
+if [ $? -ne 0 ]; then
+  echo "Pre-commit hooks failed. Please fix the errors and try again."
+  exit 1
+fi
+
+echo "Pre-commit hooks completed successfully!" 

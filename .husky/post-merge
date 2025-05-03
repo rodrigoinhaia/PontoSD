@@ -1,0 +1,30 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running post-merge hooks..."
+
+# Install dependencies if package.json was updated
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q 'package.json'; then
+  echo "package.json was updated, running npm install..."
+  npm install
+fi
+
+# Run database migrations if they were updated
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q 'src/migrations/'; then
+  echo "Database migrations were updated, running migrations..."
+  npm run migrate
+fi
+
+# Run database seeders if they were updated
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q 'src/seeders/'; then
+  echo "Database seeders were updated, running seeders..."
+  npm run seed
+fi
+
+# Clear cache if necessary
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q 'src/config/'; then
+  echo "Configuration files were updated, clearing cache..."
+  npm run clear-cache
+fi
+
+echo "Post-merge hooks completed successfully!" 

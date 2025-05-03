@@ -1,0 +1,28 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running pre-push hooks..."
+
+# Run ESLint
+echo "Running ESLint..."
+npm run lint
+
+# Run Prettier
+echo "Running Prettier..."
+npm run format
+
+# Run tests
+echo "Running tests..."
+npm test
+
+# Run build
+echo "Running build..."
+npm run build
+
+# If any of the above commands fail, exit with error
+if [ $? -ne 0 ]; then
+  echo "Pre-push hooks failed. Please fix the errors and try again."
+  exit 1
+fi
+
+echo "Pre-push hooks completed successfully!" 
