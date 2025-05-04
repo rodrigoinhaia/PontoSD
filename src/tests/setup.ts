@@ -10,9 +10,13 @@ import { Schedule } from '../models/schedule.model';
 import { User } from '../models/user.model';
 import { createTestDatabase, dropTestDatabase } from './config/test.config';
 import { hashPassword } from '../utils/auth';
+import { setupRelationships } from '../models/relationships';
 
 // Carrega as variáveis de ambiente
 dotenv.config({ path: '.env.test' });
+
+// Configura os relacionamentos entre os modelos
+setupRelationships();
 
 // Executa as migrações do banco de dados de teste
 execSync('npx sequelize-cli db:migrate --env test');

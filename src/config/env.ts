@@ -5,84 +5,137 @@ import path from 'path';
 // Carrega as variáveis de ambiente do arquivo .env
 config();
 
+// Schema de validação das variáveis de ambiente
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.string().default('3000'),
-  JWT_SECRET: z.string().min(32),
-  JWT_EXPIRES_IN: z.string().default('1d'),
-  DB_HOST: z.string().default('localhost'),
-  DB_PORT: z.string().default('5432'),
-  DB_USER: z.string().default('postgres'),
-  DB_PASS: z.string().default('postgres'),
-  DB_NAME: z.string().default('pontosd'),
-  REDIS_HOST: z.string().default('localhost'),
-  REDIS_PORT: z.string().default('6379'),
-  REDIS_PASS: z.string().optional(),
-  MAIL_HOST: z.string().default('smtp.gmail.com'),
-  MAIL_PORT: z.string().default('587'),
-  MAIL_USER: z.string().email(),
-  MAIL_PASS: z.string(),
-  MAIL_FROM: z.string().email(),
-  MAIL_NAME: z.string(),
-  STORAGE_TYPE: z.enum(['local', 's3']).default('local'),
-  AWS_ACCESS_KEY_ID: z.string().optional(),
-  AWS_SECRET_ACCESS_KEY: z.string().optional(),
-  AWS_BUCKET_NAME: z.string().optional(),
-  AWS_REGION: z.string().optional(),
-  FRONTEND_URL: z.string().url(),
+  // App
+  PORT: z.string().transform(Number),
+  NODE_ENV: z.enum(['development', 'test', 'production']),
+
+  // Database
+  DB_USERNAME: z.string(),
+  DB_PASSWORD: z.string(),
+  DB_DATABASE: z.string(),
+  DB_HOST: z.string(),
+  DB_PORT: z.string().transform(Number),
+
+  // Redis
+  REDIS_HOST: z.string(),
+  REDIS_PORT: z.string().transform(Number),
+
+  // JWT
+  JWT_SECRET: z.string(),
+  JWT_EXPIRES_IN: z.string(),
+  JWT_REFRESH_EXPIRES_IN: z.string(),
+  REFRESH_TOKEN_SECRET: z.string(),
+  REFRESH_TOKEN_EXPIRES_IN: z.string(),
+
+  // Email
+  SMTP_HOST: z.string(),
+  SMTP_PORT: z.string().transform(Number),
+  SMTP_USER: z.string(),
+  SMTP_PASS: z.string(),
+  EMAIL_FROM: z.string(),
+
+  // Geolocation
+  GOOGLE_MAPS_API_KEY: z.string(),
+  MAX_DISTANCE_METERS: z.string().transform(Number),
+
+  // Upload
+  UPLOAD_DIR: z.string(),
+  MAX_FILE_SIZE: z.string().transform(Number),
+
+  // Time
+  TIMEZONE: z.string(),
+  WORKING_HOURS_START: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  WORKING_HOURS_END: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  LUNCH_BREAK_START: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  LUNCH_BREAK_END: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+
+  // Log
+  LOG_LEVEL: z.string(),
+  LOG_FILE: z.string(),
+
+  // Rate Limit
+  RATE_LIMIT_WINDOW_MS: z.string().transform(Number),
+  RATE_LIMIT_MAX: z.string().transform(Number),
+
+  // URLs
+  API_URL: z.string(),
+  FRONTEND_URL: z.string(),
+  CORS_ORIGIN: z.string(),
 });
 
-export const env = envSchema.parse(process.env);
+// Valida as variáveis de ambiente
+const _env = envSchema.safeParse(process.env);
 
-// Validação das variáveis de ambiente obrigatórias
-const requiredEnvVars = [
-  'NODE_ENV',
-  'PORT',
-  'DB_HOST',
-  'DB_PORT',
-  'DB_USER',
-  'DB_PASSWORD',
-  'DB_NAME',
-  'JWT_SECRET',
-  'FRONTEND_URL'
-];
-
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-
-if (missingEnvVars.length > 0) {
-  throw new Error(`Variáveis de ambiente obrigatórias não definidas: ${missingEnvVars.join(', ')}`);
+if (!_env.success) {
+  console.error('❌ Invalid environment variables:', _env.error.format());
+  process.exit(1);
 }
 
-// Configurações do ambiente
+export const env = _env.data;
+
+// Importa o logger após a validação das variáveis de ambiente
+import { logger } from '../utils/logger';
+
+// Configuração do ambiente
 export const envConfig = {
-  nodeEnv: env.NODE_ENV as 'development' | 'production' | 'test',
-  port: parseInt(env.PORT || '3000'),
+  nodeEnv: process.env.NODE_ENV as 'development' | 'test' | 'production',
+  port: Number(process.env.PORT),
   db: {
-    host: env.DB_HOST,
-    port: parseInt(env.DB_PORT || '5432'),
-    user: env.DB_USER,
-    password: env.DB_PASS,
-    name: env.DB_NAME
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+  },
+  redis: {
+    host: process.env.REDIS_HOST,
+    port: Number(process.env.REDIS_PORT),
   },
   jwt: {
-    secret: env.JWT_SECRET,
-    expiresIn: env.JWT_EXPIRES_IN
+    secret: process.env.JWT_SECRET,
+    expiresIn: process.env.JWT_EXPIRES_IN,
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
+    refreshSecret: process.env.REFRESH_TOKEN_SECRET,
   },
-  frontendUrl: env.FRONTEND_URL,
-  uploadDir: path.join(__dirname, '../../public/uploads'),
-  redis: {
-    host: env.REDIS_HOST,
-    port: parseInt(env.REDIS_PORT || '6379'),
-    password: env.REDIS_PASS,
+  email: {
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+    from: process.env.EMAIL_FROM,
   },
-  mail: {
-    host: env.MAIL_HOST,
-    port: parseInt(env.MAIL_PORT || '587'),
-    user: env.MAIL_USER,
-    pass: env.MAIL_PASS,
-    from: env.MAIL_FROM,
-    name: env.MAIL_NAME,
+  geolocation: {
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+    maxDistanceMeters: Number(process.env.MAX_DISTANCE_METERS),
   },
-  frontendUrl: process.env.FRONTEND_URL,
-  uploadDir: path.join(__dirname, '../../public/uploads')
+  upload: {
+    dir: process.env.UPLOAD_DIR,
+    maxFileSize: Number(process.env.MAX_FILE_SIZE),
+  },
+  time: {
+    timezone: process.env.TIMEZONE,
+    workingHours: {
+      start: process.env.WORKING_HOURS_START,
+      end: process.env.WORKING_HOURS_END,
+    },
+    lunchBreak: {
+      start: process.env.LUNCH_BREAK_START,
+      end: process.env.LUNCH_BREAK_END,
+    },
+  },
+  log: {
+    level: process.env.LOG_LEVEL,
+    file: process.env.LOG_FILE,
+  },
+  rateLimit: {
+    windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS),
+    max: Number(process.env.RATE_LIMIT_MAX),
+  },
+  urls: {
+    api: process.env.API_URL,
+    frontend: process.env.FRONTEND_URL,
+    corsOrigin: process.env.CORS_ORIGIN,
+  },
 }; 

@@ -1,65 +1,60 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database';
 
-export class Schedule extends Model {
-  public id!: number;
+export class Company extends Model {
+  public id!: string;
   public name!: string;
-  public entryTime!: string;
-  public exitTime!: string;
-  public tolerance!: number;
-  public companyId!: number;
+  public cnpj!: string;
+  public address!: string;
+  public phone!: string;
+  public email!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-Schedule.init(
+Company.init(
   {
     id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    entryTime: {
+    cnpj: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    address: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    exitTime: {
+    phone: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    tolerance: {
-      type: DataTypes.INTEGER,
+    email: {
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: 15,
-    },
-    companyId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'empresas',
-        key: 'id',
+      validate: {
+        isEmail: true,
       },
     },
   },
   {
     sequelize,
-    tableName: 'schedules',
+    tableName: 'companies',
     timestamps: true,
     paranoid: true,
     indexes: [
       {
-        fields: ['name'],
+        fields: ['cnpj'],
       },
       {
-        fields: ['companyId'],
-      },
-      {
-        unique: true,
-        fields: ['name', 'companyId'],
+        fields: ['email'],
       },
     ],
   }

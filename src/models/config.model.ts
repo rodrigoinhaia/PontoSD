@@ -1,16 +1,16 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database';
-import { Empresa } from './empresa.model';
+import { Company } from './company.model';
 
 export class Config extends Model {
-  public id!: number;
-  public empresaId!: number;
-  public toleranciaAtraso!: number;
-  public toleranciaSaida!: number;
-  public horarioAlmoco!: number;
-  public intervaloMinimo!: number;
-  public intervaloMaximo!: number;
-  public ativo!: boolean;
+  public id!: string;
+  public companyId!: string;
+  public lateTolerance!: number;
+  public earlyExitTolerance!: number;
+  public lunchTime!: number;
+  public minInterval!: number;
+  public maxInterval!: number;
+  public active!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -18,19 +18,19 @@ export class Config extends Model {
 Config.init(
   {
     id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    empresaId: {
-      type: DataTypes.INTEGER,
+    companyId: {
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'empresas',
+        model: Company,
         key: 'id',
       },
     },
-    toleranciaAtraso: {
+    lateTolerance: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 10,
@@ -40,7 +40,7 @@ Config.init(
         max: 60,
       },
     },
-    toleranciaSaida: {
+    earlyExitTolerance: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 10,
@@ -50,7 +50,7 @@ Config.init(
         max: 60,
       },
     },
-    horarioAlmoco: {
+    lunchTime: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 60,
@@ -60,7 +60,7 @@ Config.init(
         max: 120,
       },
     },
-    intervaloMinimo: {
+    minInterval: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 30,
@@ -70,7 +70,7 @@ Config.init(
         max: 60,
       },
     },
-    intervaloMaximo: {
+    maxInterval: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 60,
@@ -80,7 +80,7 @@ Config.init(
         max: 120,
       },
     },
-    ativo: {
+    active: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
@@ -89,19 +89,18 @@ Config.init(
   {
     sequelize,
     tableName: 'configs',
-    modelName: 'Config',
     timestamps: true,
     paranoid: true,
     indexes: [
       {
-        fields: ['empresaId'],
+        fields: ['companyId'],
       },
     ],
   }
 );
 
 // Relacionamentos
-Config.belongsTo(Empresa, {
-  foreignKey: 'empresaId',
-  as: 'empresa',
+Config.belongsTo(Company, {
+  foreignKey: 'companyId',
+  as: 'company',
 }); 

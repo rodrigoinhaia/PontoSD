@@ -8,4 +8,4 @@ const corsOptions = {
   maxAge: 86400, // 24 horas
 };
 
-export { corsOptions }; 
+export { corsOptions };

@@ -1,18 +1,17 @@
 import { DataTypes, Model } from 'sequelize';
 import bcrypt from 'bcryptjs';
 import { sequelize } from '../config/database';
-import { Empresa } from './empresa.model';
-import { Schedule } from './schedule.model';
-import { Departamento } from './departamento.model';
+import { Company } from './company.model';
+import { Department } from './department.model';
 
 export class User extends Model {
-  public id!: number;
+  public id!: string;
   public name!: string;
   public email!: string;
   public password!: string;
-  public role!: 'admin' | 'user';
-  public companyId!: number;
-  public departmentId!: number;
+  public role!: 'ADMIN' | 'MANAGER' | 'USER';
+  public companyId!: string;
+  public departmentId!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -24,8 +23,8 @@ export class User extends Model {
 User.init(
   {
     id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     name: {
@@ -45,23 +44,23 @@ User.init(
       allowNull: false,
     },
     role: {
-      type: DataTypes.ENUM('admin', 'user'),
+      type: DataTypes.ENUM('ADMIN', 'MANAGER', 'USER'),
       allowNull: false,
-      defaultValue: 'user',
+      defaultValue: 'USER',
     },
     companyId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'empresas',
+        model: Company,
         key: 'id',
       },
     },
     departmentId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'departamentos',
+        model: Department,
         key: 'id',
       },
     },
@@ -100,18 +99,4 @@ User.init(
       },
     },
   }
-);
-
-// Relacionamentos
-User.belongsTo(Empresa, { foreignKey: 'companyId' });
-Empresa.hasMany(User, { foreignKey: 'companyId' });
-
-User.belongsTo(Departamento, { foreignKey: 'departmentId' });
-Departamento.hasMany(User, { foreignKey: 'departmentId' });
-
-User.hasMany(Schedule, { 
-  foreignKey: 'userId',
-  as: 'schedules'
-});
-
-export default User; 
+); 
